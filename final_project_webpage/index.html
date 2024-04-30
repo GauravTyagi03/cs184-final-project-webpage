@@ -1,0 +1,682 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>CS 184 Final Project: GPU Accelerated Raytracing with OptiX</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+    margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-uiBlue { background-color: rgba(35, 131, 226, .07); }
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-transparentGray { background-color: rgba(227, 226, 224, 0); }
+.select-value-color-translucentGray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="edb77d17-b995-4717-9349-f0de5a67042e" class="page sans"><header><h1 class="page-title">CS 184 Final Project: GPU Accelerated Raytracing with OptiX</h1><p class="page-description"></p></header><div class="page-body"><p id="fb47e4d5-ff88-4b9b-a5df-960edd5c863b" class="">Team Members: Eric Garcia, Gaurav Tyagi, Sameer Nayyar, Minseok Son </p><p id="745ef443-ce71-4af6-a099-fd7992e75c52" class="">Repo: <a href="https://github.com/GarciaEricS/184-final-project">https://github.com/GarciaEricS/184-final-project</a></p><p id="a83e8bd9-ebb9-4890-8ddf-ecf8d271becf" class="">Project Video: <a href="https://www.youtube.com/watch?v=xQM7EOd_6zA">https://www.youtube.com/watch?v=xQM7EOd_6zA</a></p><h2 id="af3db761-1278-4a8c-bf8a-1cbda58cddae" class="">Abstract:</h2><p id="2055012a-6404-4307-bbc2-16f16b69ad86" class="">Raytracing provides exceptional shading capabilities for graphics applications. However, it is very computationally intensive. A scene may have thousands of rays that need to be individually traced in order to compute lighting on different objects. Because rays do not affect one another, raytracing lends itself effectively to GPU parallelization. In this project, we implemented raytracing using OptiX, a raytracing API for CUDA. Our GPU acceleration parallelizes casting rays, computing colors, and recasting rays according to the shading binder table and nodes in the scene. We developed a program that recreates the outputs of Homework 3 accelerated using the GPU that includes support for different parameters and inputs. Using our Homework 3 implementation as a baseline, we achieved up to a 22x speedup. A more detailed report of speedups with different rendering parameters can be found in the results section. </p><h2 id="a41190d0-e02c-4aa2-a78f-a8454cf0a4a7" class="">Technical Approach:</h2><p id="e0f1297d-7d64-439d-be58-41ce510e9035" class="">Our final deliverable appears identical to that of Homework 3, and the general processes of raytracing are also quite similar. However, the technical approach is entirely different, as outlined below. </p><p id="382a551e-cf18-4104-a08e-be1d96cc86a8" class="">The NVIDIA OptiX API is built around the interactions between program groups, acceleration structures (AS), and the shader binding table (SBT), all specified in a pipeline. The pipeline elements are:</p><p id="83cb695a-33ff-417f-9df8-93d802291315" class=""><strong>Program Groups:</strong> Program groups are like shader functions in traditional rendering functions. There are different program groups depending on the different ray-intersection types. Our program specifies program groups for misses, hits, and ray generation. </p><p id="f857697d-0f9c-4b1b-93e5-4d04d2124471" class=""><strong>Mesh Acceleration Structure:</strong> Determining intersections for program groups requires building and iterating through a mesh that represents the objects in our scene. We represent our mesh as a triangle mesh, much like in homework 3, and we build the acceleration structure for our triangle mesh on the CPU, before any program group calculations. </p><p id="202ae348-ea42-4f2c-bd2d-6e9f1cd56e99" class=""><strong>Shader Binding Table:</strong> The shader binding table provides an association between geometries in the scene and their corresponding program groups. The SBT is used when calculating our color at object intersections using our BSDF.  </p><p id="0ecebd66-dda5-4cdf-9615-91a627f63166" class="">The pipeline initializes all our program groups, allocating space on the stack for OptiX to handle computation and setting up various other aspects of our GPU state. This ensures that ray computations are called effectively. </p><h3 id="618ce9bc-c7ba-42c8-aadd-1a44eff23621" class="">Summary of Program Flow</h3><ol type="1" id="ddd77349-b70b-4948-9dc3-296557f459a8" class="numbered-list" start="1"><li>Our program takes a .dae file as input and builds a triangle mesh and acceleration structure. </li></ol><ol type="1" id="8ddc2cd9-1675-449d-ac5a-f32d026b24f3" class="numbered-list" start="2"><li>Create program groups for ray generation, hits, and misses, specifying their parameters.</li></ol><ol type="1" id="fb6ef22b-e8be-449f-b283-5d4d8f4c2e02" class="numbered-list" start="3"><li>Create a shader binding table to map scene geometries to program groups, which ultimately is used to determine color and shading at ray intersections. </li></ol><ol type="1" id="8559b605-719f-4d92-8b90-6b5ea847b8d6" class="numbered-list" start="4"><li>Build OptiX pipelines, specifying appropriate program groups, SBT, and GPU parameters.</li></ol><ol type="1" id="cc16662a-1fc7-475e-a969-9d46a6fa3eb6" class="numbered-list" start="5"><li>Call optixLaunch in main.cpp, which launches rays from every pixel, calling functions from the <a href="http://main.cu">main.cu</a> file when each ray intersects the mesh geometry.</li></ol><ol type="1" id="e0018484-fe97-4a5a-ada4-6bbe4c4e59fc" class="numbered-list" start="6"><li>The CUDA file specifies computations for rays, importance sampling, intersections, and other functions in raytracing. Under the hood of the OptiX API, the raygen function launches radiance rays, which hit objects, generate color outputs from each objects BSDF, and then bounce more rays for indirect lighting effects.</li></ol><ol type="1" id="022a3b97-3577-4d5d-ba3a-7e3d0f7c5e74" class="numbered-list" start="7"><li> This then fills a framebuffer with color values for each pixel and displays the resulting image in a window. </li></ol><h2 id="f80addbb-07f4-44c6-91bc-4919b6b5a4a5" class="">Problems and Lessons:</h2><ul id="c2d5e3d8-3817-446e-bff6-96b16c5d12ea" class="bulleted-list"><li style="list-style-type:disc">We mainly referenced the samples that came with OptiX SDK and OptiX SDK programming guide. As the reference path tracing program used iterative ray tracing rather than a recursive approach with approximate integration using constant attenuation, we had to modify the code to be recursive and use the rendering equation instead.</li></ul><ul id="6d25e1a3-d7b2-4e34-9fa0-f913f616a42d" class="bulleted-list"><li style="list-style-type:disc">The first challenge was to set up the environment and display the test screen. We explored how to include the OptiX library with CMake build files. As OptiX employs an unconventional shader system, we had to figure out how to compile shader files and load them from our host program.</li></ul><ul id="39138f52-967e-4cf1-ad10-afac65bdae5a" class="bulleted-list"><li style="list-style-type:disc">Additionally, we initially had separate output buffers for OptiX and OpenGL which wasn’t optimal. Using OptiX / OpenGL interop API, we were able to write to OpenGL PBO from OptiX shader codes.</li></ul><ul id="4198de3a-21f9-4daf-a717-9ecdcbb2c980" class="bulleted-list"><li style="list-style-type:disc">Then, we had to set up the boilerplate code for OptiX, such as building and linking modules, setting up SBT, and launching the ray generation shader. We first used a simple one-triangle scene to check if we set up the host program correctly.</li></ul><ul id="1db896b4-d9f0-4375-a53b-bc7b941737eb" class="bulleted-list"><li style="list-style-type:disc">We then tried to build an acceleration structure (equivalent to a BVH). We first had to copy and modify the collada parser from Homework 3 to read mesh information and camera information from the scene.</li></ul><ul id="0f528498-7f93-4402-85a3-1eeb0e6a669f" class="bulleted-list"><li style="list-style-type:disc">Then, we had to launch ray tracing from the shader code using the OptiX API, passing the emission and reflectance data through the SBT.</li></ul><ul id="58f2ebc5-141a-4f62-8aa1-5f6664296b50" class="bulleted-list"><li style="list-style-type:disc">We had to do a lot of debugging at almost every step, and as the majority of the code is run on the GPU, it was really hard to get any useful debugging information out. Our main way of debugging our code was to write colors onto the framebuffer or use assertions from CUDA.</li></ul><ul id="cce40167-1f05-4173-9d25-6c83989acbf4" class="bulleted-list"><li style="list-style-type:disc">There were a lot of pitfalls, for example, we had to create an SBT for each object on the screen, otherwise our code would render garbage pixels. As there were no errors, this was by far the hardest problem to debug. We had to carefully read the documentation to find the cause.</li></ul><ul id="7b19a593-cdee-4748-8850-f60a939c5433" class="bulleted-list"><li style="list-style-type:disc">From this project, we learned the skill of using frameworks by reading documentation and examples (and sometimes the library code itself!) to build things. Before this project, we had no idea how to write programs for the GPU, but now we know how the rendering pipeline works and, most importantly, how to interface the host and device code together.</li></ul><h2 id="4287eaad-8653-4645-b9ca-ea8894d13335" class="">Results: </h2><p id="b2434865-612c-46a5-9da4-ab4f8e8396c9" class="">Our code renders the bunny.dae file from class very quickly, as seen below. </p><figure id="a02e8596-2fad-4dd9-9da2-971ac11060e5" class="image"><a href="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/8e49a370-24a3-424a-aa1d-934981ed515b.png"><img style="width:442.02097235462344px" src="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/8e49a370-24a3-424a-aa1d-934981ed515b.png"/></a><figcaption><code>bunny.dae</code> -l 1 -s 256 -m 5 -r 1920 1080 ../dae/sky/CBbunny.dae</figcaption></figure><p id="c68997b2-2895-4f76-8cd6-396cc827d46e" class="">
+</p><p id="026d701f-33c0-4756-b52c-f09ccb1c14e7" class=""><em>Note: for CPU, using 14/16 cores</em></p><p id="2a469e58-9097-4976-b7e2-edb80e3f60a1" class="">
+</p><p id="bc0dde6a-f7c4-4989-80a5-3365ab19ce82" class="">We see that GPU performance outpaces CPU performance at a far greater rate for increases in samples/pixel (S) than for increases to ray depth (M).</p><div id="09e70d9a-012c-4463-a28b-54244b928e46" class="column-list"><div id="274b1724-39b6-4c5f-be2d-7fc35a0f6702" style="width:50%" class="column"><figure id="fffbf4b6-1221-4f86-8507-58d16dc37af6" class="image"><a href="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/num_bounce_render.png"><img style="width:640px" src="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/num_bounce_render.png"/></a></figure></div><div id="6498ea94-f77b-473d-92c3-fdb0ac61df08" style="width:50%" class="column"><figure id="15258cbc-46df-4e45-b49c-0208e1385ba0" class="image"><a href="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/num_bounce_speedup.png"><img style="width:640px" src="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/num_bounce_speedup.png"/></a></figure></div></div><p id="7c4f37b4-335b-4a0c-9962-c7db8dba266b" class="">As we increase the ray depth, each ray calculation cannot be parallelized and needs to be computed by an individual GPU core. The work for each GPU core must also increase, and the performance advantages of the GPU are reduced as we increase M. </p><div id="e24fe711-e3c7-4635-8fdd-2d0eeafc05c8" class="column-list"><div id="75ab34a0-61dd-4bb6-a1eb-3167b5cead29" style="width:50%" class="column"><figure id="583c75b9-a1b6-4f20-bb50-d1083689985b" class="image"><a href="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/pixel_sample_render.png"><img style="width:640px" src="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/pixel_sample_render.png"/></a></figure></div><div id="710a79fa-6208-40ef-a2b7-9986ae199183" style="width:50%" class="column"><figure id="c7b8bc07-4f32-4054-be42-f8be56f953ce" class="image"><a href="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/sample_pixel_speedup.png"><img style="width:640px" src="CS%20184%20Final%20Project%20GPU%20Accelerated%20Raytracing%20wi%20edb77d17b99547179349f0de5a67042e/sample_pixel_speedup.png"/></a></figure></div></div><p id="f239c98e-abc0-4044-9dd7-0f6cff4d7e1b" class="">In contrast, as samples/pixel increases, we have more individual ray calculations which can be effectively paralleled by the GPU. As a result, the performance advantages of the GPU become even greater. However, at a certain point, the GPU cores will fill up and begin doing work sequentially, which they are not optimized to do. Therefore the ratio reduces, and we see a sharp decrease in the graph. It is worth noting that the speedup is still 10x for 2048 samples/pixel, a significant improvement.</p><h2 id="3ec83257-01d6-49e1-b2f2-701728bed236" class="">References:</h2><p id="3ce16403-9b96-4b4b-8163-5706174a4325" class=""><a href="https://github.com/ingowald/optix7course/tree/master?tab=readme-ov-file">https://github.com/ingowald/optix7course/tree/master?tab=readme-ov-file</a></p><p id="89d6fc25-c22b-4f02-9cc0-09bb843e9e98" class=""><a href="https://drive.google.com/drive/folders/1_IYHwAZ4EoMcDmS0TknP-TZd7Cwmab_I">https://drive.google.com/drive/folders/1_IYHwAZ4EoMcDmS0TknP-TZd7Cwmab_I</a></p><p id="a243a14f-426b-4cf6-9ade-22dcb3683d68" class="">These links are for the repository and slides for an OptiX tutorial by Ingo Wald. We used these resources as a reference for the general procedure to build up our program. The slides were especially helpful for understanding the order in which to build various parts of the project. </p><p id="1c055eed-0ef5-4311-b324-e94cdb6f34a1" class=""><a href="https://raytracing-docs.nvidia.com/optix7/guide/index.html#preface#">https://raytracing-docs.nvidia.com/optix7/guide/index.html#preface#</a></p><p id="3c1227e3-487b-4dbe-8f20-f595fb6dc57b" class="">The OptiX official documentation.</p><h2 id="935ee24d-935f-4330-b8b2-92264910c5ad" class="">Contributions:</h2><p id="b1218415-6c1b-44cc-8c6a-630863c9730d" class="">Eric Garcia: Adapted infrastructure to work on Windows. Wrote ray tracing code and debugged code for hard-shadows implementation. Profiled the CPU and GPU versions of the raytracer to compute speed differences.</p><p id="a15711f4-83c0-4c98-8a1a-85f23a114bfc" class="">Gaurav Tyagi: Wrote raytracing code and wrote the majority of this website.</p><p id="69a9190f-fb32-4971-8d93-810af07b8972" class="">Sameer Nayyar: Wrote lots of raytracing code. Added support for direct illumination (one bounce raytracing).</p><p id="ef477429-90dc-4319-8112-586fbfc00671" class="">Minseok Son: Set up infrastructure including setting up the OptiX pipeline, parsing the .dae file to create the meshes, and setting up OpenGL. Wrote a large amount of raytracing code including code for mesh acceleration and global illumination. Debugged lots of others’ code when it wasn’t working.</p><p id="317a757a-d4d6-4086-bc68-39e5c340edd8" class="">
+</p><p id="4875160a-c54a-420f-8b56-62d54001beb9" class="">
+</p><p id="c8f48818-6a9a-4d51-b9bd-1801d0e01960" class="">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
